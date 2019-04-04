@@ -1,6 +1,6 @@
 tokens = [
 	'IF', 'ELSE', 'WHILE', 'FOR', 'RETURN', 'BREAK', 'MAIN', 'END', 'READ', 'PRINT', 'STRING',
-	'INT', 'FLOAT', 'BOOLEAN', 
+	'INT', 'FLOAT', 'BOOLEAN', 'IDNAME', 'FLTLIT', 'INTLIT', 'STRLIT', 
 
 	#(+, -, *, /, %, ||, &&, !, <, <=, >, >=, ==, !=)
 	'PLUS', 'MINUS', 'MUL', 'DIV', 'MOD',
@@ -13,8 +13,28 @@ tokens = [
     #Delimeters ( ) [ ] { } , ;
     'OPENAR', 'CLOSEAR', 'OPENBRACE', 'CLOSEBRACE', 'OPENCURLY', 'CLOSECURLY',
     'COMMA', 'SEMICOLON',
-
 ]
+
+literals = ['=', '+', '-', '*', '/', '%', '(', ')']
+
+#Keywords
+t_IF 			   = r'BIF'
+t_ELSE			   = r'BELSE'
+t_WHILE			   = r'BHILE'
+t_FOR			   = r'BOOP' #LOOP
+t_RETURN           = r'BETURN'
+t_BREAK            = r'BREAK'
+t_MAIN             = r'BAIN'
+t_END              = r'BEND'
+t_READ             = r'BEAD'
+t_PRINT            = r'BRINT'
+
+#Data Type
+t_STRING           = r'BTRING'
+t_INT              = r'BINT'
+t_FLOAT            = r'BLOAT'
+t_BOOLEAN          = r'BOOL'
+
 #OPERATORS
 t_PLUS             = r'\+'
 t_MINUS            = r'-'
@@ -62,11 +82,6 @@ def t_CPPCOMMENT(t):
     t.lexer.lineno += 1
     return t
 
-def t_NUMBER(t):
-    r'\d+'
-    t.value = int(t.value)
-    return t
-
 t_ignore = " \t"
 
 def t_newline(t):
@@ -91,12 +106,15 @@ precedence = (
 		('left', '+', '-'),
 		('left', '*', '/', '%'),
 		('left', '[]', '()'),
-
 	)
 
-#dictionary of names
+#names{}
 names = {}
 
+def p_statement_assign(p):
+    'statement : IDNAME "=" expression'
+    names[p[1]] = p[3]
+	
 def p_statement_expr(p):
     'statement : expression'
     print(p[1])
@@ -117,6 +135,30 @@ def p_expression_binop(p):
         p[0] = p[1] / p[3]
     elif p[2] == '%':
     	p[0] = p[1] % p[3]
+
+def p_expression_boolop(p):
+ 	'''expression : expression '>' expression
+ 				  | expression '<' expression
+ 				  | expression '>=' expression
+ 				  | expression '<=' expression
+ 				  | expression '==' expression
+ 				  | expression '!=' expression'''
+ 	if p[2] == '>':
+ 		p[0] = p[1] > p[3]
+ 	elif p[2] == '<':
+ 		p[0] = p[1] < p[3]
+ 	elif p[2] == '>=':
+ 		p[0] = p[1] >= p[3]
+ 	elif p[2] == '<=':
+ 		p[0] = p[1] <= p[3]
+ 	elif p[2] == '==':
+ 		p[0] = p[1] == p[3]
+ 	elif p[2] == '!=':
+ 		p[0] = p[1] != p[3]
+
+def p_expression_group(p):
+	"expression : '(' expression ')'"
+	p[0] = p[2]
 
 import ply.yacc as yacc
 yacc.yacc()
